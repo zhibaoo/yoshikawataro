@@ -67,7 +67,6 @@ def simulate_place(board, stone, x, y):
                 board[fy][fx] = stone
 
 def evaluate_board(board, stone):
-    """戦略をさらに強化した評価関数"""
     stable_discs = 0
     mobility = 0
     potential_mobility = 0
@@ -78,42 +77,46 @@ def evaluate_board(board, stone):
         for x in range(len(board[0])):
             if board[y][x] == stone:
                 if (x, y) in corner_positions:
-                    stable_discs += 300  # 角を圧倒的に高評価
+                    stable_discs += 300
                 elif (x, y) in bad_positions:
-                    stable_discs -= 100  # リスクのある辺は大きく減点
+                    stable_discs -= 150
                 else:
                     stable_discs += 1
             elif board[y][x] == 3 - stone:
                 if (x, y) in corner_positions:
                     stable_discs -= 300
                 elif (x, y) in bad_positions:
-                    stable_discs += 100
+                    stable_discs += 150
                 else:
                     stable_discs -= 1
 
-    # モビリティ（合法手数）の評価
+    # モビリティの評価
     my_moves = len(get_legal_moves(board, stone))
     opponent_moves = len(get_legal_moves(board, 3 - stone))
-    mobility = (my_moves - opponent_moves) * 20  # モビリティの重みを強化
+    mobility = (my_moves - opponent_moves) * 30  # モビリティの重みをさらに強化
 
-    # 潜在モビリティ（相手の将来の手数）の評価
+    # 潜在モビリティの評価
     potential_mobility = sum(
         1 for y in range(len(board)) for x in range(len(board[0]))
         if board[y][x] == 0 and any(
             0 <= x + dx < len(board[0]) and 0 <= y + dy < len(board) and can_place_x_y(board, 3 - stone, x + dx, y + dy)
-            for dx, dy in [(-1, -1), (-1, 0), (-1, 1),
-                           (0, -1), (0, 1),
-                           (1, -1), (1, 0), (1, 1)]
+            for dx, dy in [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         )
     )
 
-    # 石数を終盤で強化
+    # 石数を終盤で評価
     total_stones = sum(row.count(BLACK) + row.count(WHITE) for row in board)
     stone_count_bonus = 0
-    if total_stones > 50:  # 終盤に石数を重視
-        stone_count_bonus = sum(row.count(stone) for row in board) * 20
+    if total_stones > 50:
+        stone_count_bonus = sum(row.count(stone) for row in board) * 10
 
-    return stable_discs + mobility - potential_mobility * 10 + stone_count_bonus
+    return stable_discs + mobility - potential_mobility * 5 + stone_count_bonus
+  
+def place(self, board, stone):
+    depth = self.determine_depth(board)
+    _, best_move = self.alpha_beta(board, stone, depth, -math.inf, math.inf, True)
+    print(f"AIが選択した手: {best_move} (評価値: {_})")
+    return best_move
 
 class TaroAI:
     def face(self):
